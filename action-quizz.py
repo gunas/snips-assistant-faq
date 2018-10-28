@@ -11,114 +11,54 @@ MQTT_PORT = 1883
 MQTT_ADDR = "{}:{}".format(MQTT_IP_ADDR, str(MQTT_PORT))
 
 
-INTENT_START_QUIZ = "start_lesson"
-INTENT_ANSWER = "give_answer"
+INTENT_START_MISSING_MILES_FAQ = "claim_miles_query_start"
+INTENT_MILES_MISSING_FLIGHT = "claim_miles_flown_flight"
 INTENT_INTERRUPT = "interrupt"
 INTENT_DOES_NOT_KNOW = "does_not_know"
 
 INTENT_FILTER_GET_ANSWER = [
-    INTENT_ANSWER,
+    INTENT_MILES_MISSING_FLIGHT,
     INTENT_INTERRUPT,
     INTENT_DOES_NOT_KNOW
 ]
 
-SessionsStates = {}
-
-
-def user_request_quiz(hermes, intent_message):
-    print("User is asking for a quiz")
-    number_of_questions = 1
-    tables = []
-
-    if intent_message.slots.number:
-        number_of_questions = intent_message.slots.number.first().value
-    if intent_message.slots.tables:
-        tables = [intent_message.slots.tables.first().value]
-
-    session_state, sentence = tt.start_quiz(number_of_questions, tables)
-
-    tt.save_session_state(SessionsStates, intent_message.session_id, session_state)
-
-    hermes.publish_continue_session(intent_message.session_id, sentence, INTENT_FILTER_GET_ANSWER)
-
+def start_missing_miles_faq(hermes, intent_message):
+    print("missing_miles_faq start")
+    if intent_message.intent.probability > 0.9:
+        result_message = "start missing miles faq. did you miss your flight?"
+    else:
+        result_message = "not sure if you concern about miles, can you ask again"
+    hermes.publish_continue_session(intent_message.session_id, result_message, INTENT_FILTER_GET_ANSWER)
 
 def user_gives_answer(hermes, intent_message):
     print("User is giving an answer")
 
-    answer = None
-    session_id = intent_message.session_id
-    session_state = SessionsStates.get(session_id)
-
-    if intent_message.slots.answer:
-        answer = intent_message.slots.answer.first().value
-
-    session_state, sentence, continues = tt.check_user_answer(session_state, answer)
-
-    if not continues:
-        hermes.publish_end_session(session_id, sentence)
-        tt.remove_session_state(SessionsStates, session_id)
-        return
-
-    hermes.publish_continue_session(session_id, sentence, INTENT_FILTER_GET_ANSWER)
-
 
 def user_does_not_know(hermes, intent_message):
     print("User does not know the answer")
-    session_id = intent_message.session_id
-
-    sentence, continues = tt.user_does_not_know(session_id, SessionsStates)
-
-    if not continues:
-        hermes.publish_end_session(session_id, sentence)
-        tt.remove_session_state(SessionsStates, session_id)
-        return
-
-    hermes.publish_continue_session(session_id, sentence, INTENT_FILTER_GET_ANSWER)
+    
 
 
 def user_quits(hermes, intent_message):
     print("User wants to quit")
-    session_id = intent_message.session_id
-
-    tt.remove_session_state(SessionsStates, session_id)
-    hermes.publish_end_session(session_id, tt.terminate_early(SessionsStates, session_id))
-
+    
 
 def session_started(hermes, session_started_message):
     print("Session Started")
 
-    print("sessionID: {}".format(session_started_message.session_id))
-    print("session site ID: {}".format(session_started_message.site_id))
-    print("sessionID: {}".format(session_started_message.custom_data))
 
-    session_id = session_started_message.session_id
-    custom_data = session_started_message.custom_data
-
-    if custom_data:
-        if SessionsStates.get(custom_data):
-            SessionsStates[session_id] = SessionsStates[custom_data]
-            SessionsStates.pop(custom_data)
 
 
 def session_ended(hermes, session_ended_message):
     print("Session Ended")
-    session_id = session_ended_message.session_id
-    session_site_id = session_ended_message.site_id
-
-    if SessionsStates.get(session_id) is not None:
-        hermes.publish_start_session_action(site_id=session_site_id,
-                                            session_init_text="",
-                                            session_init_intent_filter=INTENT_FILTER_GET_ANSWER,
-                                            session_init_can_be_enqueued=False,
-                                            custom_data=session_id)
 
 
 with Hermes(MQTT_ADDR) as h:
 
-    h.subscribe_intent(INTENT_START_QUIZ, user_request_quiz) \
+    h.subscribe_intent(INTENT_START_MISSING_MILES_FAQ, start_missing_miles_faq) \
         .subscribe_intent(INTENT_INTERRUPT, user_quits) \
         .subscribe_intent(INTENT_DOES_NOT_KNOW, user_does_not_know) \
-        .subscribe_intent(INTENT_ANSWER, user_gives_answer) \
+        .subscribe_intent(INTENT_MILES_MISSING_FLIGHT, user_gives_answer) \
         .subscribe_session_ended(session_ended) \
         .subscribe_session_started(session_started) \
         .start()

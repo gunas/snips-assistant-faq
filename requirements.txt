@@ -1,1 +1,1 @@
-hermes_python>=0.1
+hermes-python>=0.1

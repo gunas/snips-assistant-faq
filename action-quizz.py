@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import ConfigParser
-from hermes_python.hermes import Hermes
-from hermes_python.ontology import *
+from hermes-python.hermes import Hermes
+from hermes-python.ontology import *
 import io
 
 CONFIGURATION_ENCODING_FORMAT = "utf-8"

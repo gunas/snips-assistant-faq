@@ -16,5 +16,5 @@ then
 fi
 
 . $VENV/bin/activate
-
+pip install future
 pip install -r requirements.txt

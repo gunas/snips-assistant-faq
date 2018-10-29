@@ -8,16 +8,6 @@ import io
 
 CONFIGURATION_ENCODING_FORMAT = "utf-8"
 CONFIG_INI = "config.ini"
-INTENT_START_MISSING_MILES_FAQ = "claim_miles_query_start"
-INTENT_MILES_MISSING_FLIGHT = "claim_miles_flown_flight"
-INTENT_INTERRUPT = "interrupt"
-INTENT_DOES_NOT_KNOW = "does_not_know"
-
-INTENT_FILTER_GET_ANSWER = [
-    INTENT_MILES_MISSING_FLIGHT,
-    INTENT_INTERRUPT,
-    INTENT_DOES_NOT_KNOW
-]
 
 class SnipsConfigParser(ConfigParser.SafeConfigParser):
     def to_dict(self):
@@ -38,48 +28,26 @@ def subscribe_intent_callback(hermes, intentMessage):
     action_wrapper(hermes, intentMessage, conf)
 
 
-
-def start_missing_miles_faq(hermes, intent_message):
-    print("missing_miles_faq start")
-    if intent_message.intent.probability > 0.9:
-        result_message = "start missing miles faq. did you miss your flight?"
+def action_wrapper(hermes, intentMessage, conf):
+    """ Write the body of the function that will be executed once the intent is recognized. 
+    In your scope, you have the following objects : 
+    - intentMessage : an object that represents the recognized intent
+    - hermes : an object with methods to communicate with the MQTT bus following the hermes protocol. 
+    - conf : a dictionary that holds the skills parameters you defined. 
+      To access global parameters use conf['global']['parameterName']. For end-user parameters use conf['secret']['parameterName'] 
+     
+    Refer to the documentation for further details. 
+    """ 
+    if intentMessage.intent.probability > 0.9:
+       result_message = "hai, do you like to proceed"
     else:
-        result_message = "not sure if you concern about miles, can you ask again"
-    hermes.publish_continue_session(intent_message.session_id, result_message, INTENT_FILTER_GET_ANSWER)
-
-def user_gives_answer(hermes, intent_message):
-    print("User is giving an answer")
-
-
-def user_does_not_know(hermes, intent_message):
-    print("User does not know the answer")
+        result_message = "hai, Can you very specific with your question?"
+    hermes.publish_end_session(intentMessage.sessionId, result_sentence)
     
-
-
-def user_quits(hermes, intent_message):
-    print("User wants to quit")
-    
-
-def session_started(hermes, session_started_message):
-    print("Session Started")
-
-
-
-
-def session_ended(hermes, session_ended_message):
-    print("Session Ended")
 
 
 if __name__ == "__main__":
     with Hermes("localhost:1883") as h:
-        h.subscribe_intent(INTENT_START_MISSING_MILES_FAQ, start_missing_miles_faq) \
-         .subscribe_intent(INTENT_INTERRUPT, user_quits) \
-         .subscribe_intent(INTENT_DOES_NOT_KNOW, user_does_not_know) \
-         .subscribe_intent(INTENT_MILES_MISSING_FLIGHT, user_gives_answer) \
-         .subscribe_session_ended(session_ended) \
-         .subscribe_session_started(session_started) \
+        h.subscribe_intent("gunasekartr:claim_miles_query_start", subscribe_intent_callback) \
          .start()
-
-
-
 

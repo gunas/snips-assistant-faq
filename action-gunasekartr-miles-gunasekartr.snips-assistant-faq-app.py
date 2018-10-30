@@ -39,7 +39,7 @@ def action_wrapper(hermes, intentMessage, conf):
     Refer to the documentation for further details. 
     """ 
     current_session_id = intentMessage.session_id
-    hermes.publish_end_session(current_session_id, "Ok Google")
+    hermes.publish_end_session(current_session_id, "talk to KLM")
     
 
 

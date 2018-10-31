@@ -41,8 +41,7 @@ def action_wrapper(hermes, intentMessage, conf):
     current_session_id = intentMessage.session_id
     if intentMessage.intent.probability > 0.9:
         print("handling.....")
-        print(intentMessage.slots.flight_status.value)
-        flight_status = intentMessage.slots.value.value
+        flight_status = intentMessage.slots.value
         print(flight_status)
         if flight_status == "flown":
             result_message = "No problem. You can claim missing Miles 2 weeks after your flight and up to 6 months after your flight date."

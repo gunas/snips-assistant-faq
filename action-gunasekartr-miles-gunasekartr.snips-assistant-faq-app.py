@@ -40,6 +40,7 @@ def action_wrapper(hermes, intentMessage, conf):
     """ 
     current_session_id = intentMessage.session_id
     if intentMessage.intent.probability > 0.9:
+        print("handling.....")
         print(intentMessage.slots.flight_status.first().value)
         flight_status = intentMessage.slots.value.value
         print(flight_status)

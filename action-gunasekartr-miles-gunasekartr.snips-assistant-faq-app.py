@@ -39,11 +39,19 @@ def action_wrapper(hermes, intentMessage, conf):
     Refer to the documentation for further details. 
     """ 
     current_session_id = intentMessage.session_id
-    hermes.publish_end_session(current_session_id, "talk to KLM")
-    
+    if intentMessage.intent.probability > 0.9:
+        flight_status = intentMessage.slots.value.value
+        if flight_status == "flown":
+            result_message = "No problem. You can claim missing Miles 2 weeks after your flight and up to 6 months after your flight date."
+        else:
+            result_message = "Simply add your Flying Blue number to your booking, then watch your Miles and XP counter grow!"
+    else:
+        result_message = "I think you have concern about your miles redemption, please could you ask your question again?"
+    hermes.publish_end_session(current_session_id, result_message)
+  
 
 
 if __name__ == "__main__":
     with Hermes("localhost:1883") as h:
-        h.subscribe_intent("gunasekartr:miles", subscribe_intent_callback) \
+        h.subscribe_intent("gunasekartr:claimMissingMiles", subscribe_intent_callback) \
          .start()
